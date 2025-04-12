@@ -1,0 +1,49 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: facility-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/healthcare_facility
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+      bindings:
+        appointmentCreatedInput:
+          destination: appointment-created
+          contentType: application/json
+          group: facility-service-group
+        referralCreatedInput:
+          destination: referral-created
+          contentType: application/json
+          group: facility-service-group
+
+services:
+  identity:
+    url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+  people:
+    url: ${PEOPLE_SERVICE_URL:http://localhost:8082}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+  packages-to-scan: br.com.fiap.tech.facility.controller

@@ -1,0 +1,42 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: identity-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/healthcare_identity
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+      bindings:
+        userCreatedOutput:
+          destination: user-created
+          contentType: application/json
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+  packages-to-scan: br.com.fiap.tech.identity.controller
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret}
+  expiration: 86400000 # 24 hours
