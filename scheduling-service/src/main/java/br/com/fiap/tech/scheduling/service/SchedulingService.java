@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import br.com.fiap.tech.scheduling.client.FacilityClient;
+import br.com.fiap.tech.scheduling.dto.NearbyFacilityResponse;
 
 import java.util.List;
 
