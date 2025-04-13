@@ -1,7 +1,5 @@
-package br.com.fiap.tech.scheduling.events;
+package br.com.fiap.tech.facility.events;
 
-import br.com.fiap.tech.scheduling.domain.PriorityLevel;
-import br.com.fiap.tech.scheduling.domain.ReferralType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +11,6 @@ public class ReferralCreatedEvent {
     private Long referralId;
     private Long patientId;
     private Long requestedByDoctorId;
-    private ReferralType referralType;
-    private PriorityLevel priorityLevel;
-}
+    private String referralType;
+    private String priorityLevel;
+} 

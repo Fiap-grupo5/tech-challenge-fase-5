@@ -23,8 +23,9 @@ public class Referral {
     @Column(nullable = false)
     private String referralReason;
     
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String priorityLevel;
+    private PriorityLevel priorityLevel;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

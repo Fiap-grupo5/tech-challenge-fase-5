@@ -120,5 +120,5 @@ springdoc:
   packages-to-scan: br.com.fiap.tech.identity.controller
 
 jwt:
-  secret: ${JWT_SECRET:your-256-bit-secret}
+  secret: ${JWT_SECRET:c7fd2e876d9d46c2a3d8e5c2f6a95b3a8f4b7c1e9a2d5b8e3f6c9d2a5b8e1f4}
   expiration: 86400000 # 24 hours

@@ -14,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.event.EventListener;
 
 @Service
 @RequiredArgsConstructor
@@ -23,28 +24,37 @@ public class PeopleService {
     private final DoctorRepository doctorRepository;
     private final AdministratorRepository administratorRepository;
 
-    @Transactional
+    @EventListener
     public void handleUserCreated(UserCreatedEvent event) {
         switch (event.getUserType()) {
-            case "PATIENT":
-                Patient patient = Patient.builder()
-                        .id(event.getUserId())
-                        .build();
-                patientRepository.save(patient);
-                break;
-            case "DOCTOR":
-                Doctor doctor = Doctor.builder()
-                        .id(event.getUserId())
-                        .build();
-                doctorRepository.save(doctor);
-                break;
-            case "ADMINISTRATOR":
-                Administrator administrator = Administrator.builder()
-                        .id(event.getUserId())
-                        .build();
-                administratorRepository.save(administrator);
-                break;
+            case "PATIENT" -> createPatient(event);
+            case "DOCTOR" -> createDoctor(event);
+            case "ADMINISTRATOR" -> createAdministrator(event);
         }
+    }
+
+    @Transactional
+    public void createPatient(UserCreatedEvent event) {
+        Patient patient = Patient.builder()
+                .id(event.getUserId())
+                .build();
+        patientRepository.save(patient);
+    }
+
+    @Transactional
+    public void createDoctor(UserCreatedEvent event) {
+        Doctor doctor = Doctor.builder()
+                .id(event.getUserId())
+                .build();
+        doctorRepository.save(doctor);
+    }
+
+    @Transactional
+    public void createAdministrator(UserCreatedEvent event) {
+        Administrator administrator = Administrator.builder()
+                .id(event.getUserId())
+                .build();
+        administratorRepository.save(administrator);
     }
 
     @Transactional
