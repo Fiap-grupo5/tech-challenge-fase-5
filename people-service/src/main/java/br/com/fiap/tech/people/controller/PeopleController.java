@@ -44,11 +44,24 @@ public class PeopleController {
         @ApiResponse(responseCode = "404", description = "Patient not found")
     })
     @PutMapping("/patients/{id}")
-    public ResponseEntity<Patient> updatePatient(
+    public ResponseEntity<Void> updatePatient(
             @PathVariable Long id,
             @RequestBody PatientRequest request
     ) {
-        return ResponseEntity.ok(peopleService.updatePatient(id, request));
+        UpdatePatientRequest updateRequest = new UpdatePatientRequest();
+        updateRequest.setId(id);
+        updateRequest.setFullName(request.getFullName());
+        updateRequest.setCpf(request.getCpf());
+        updateRequest.setNationalHealthCard(request.getNationalHealthCard());
+        updateRequest.setPhoneNumber(request.getPhoneNumber());
+        updateRequest.setBirthDate(request.getBirthDate());
+        updateRequest.setAddress(request.getAddress());
+        updateRequest.setCity(request.getCity());
+        updateRequest.setState(request.getState());
+        updateRequest.setZipCode(request.getZipCode());
+        
+        peopleService.updatePatient(updateRequest);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(
@@ -74,11 +87,20 @@ public class PeopleController {
         @ApiResponse(responseCode = "404", description = "Doctor not found")
     })
     @PutMapping("/doctors/{id}")
-    public ResponseEntity<Doctor> updateDoctor(
+    public ResponseEntity<Void> updateDoctor(
             @PathVariable Long id,
             @RequestBody DoctorRequest request
     ) {
-        return ResponseEntity.ok(peopleService.updateDoctor(id, request));
+        UpdateDoctorRequest updateRequest = new UpdateDoctorRequest();
+        updateRequest.setId(id);
+        updateRequest.setFullName(request.getFullName());
+        updateRequest.setCpf(request.getCpf());
+        updateRequest.setCrm(request.getCrm());
+        updateRequest.setSpecialty(request.getSpecialty());
+        updateRequest.setPhoneNumber(request.getPhoneNumber());
+        
+        peopleService.updateDoctor(updateRequest);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(
@@ -104,10 +126,17 @@ public class PeopleController {
         @ApiResponse(responseCode = "404", description = "Administrator not found")
     })
     @PutMapping("/administrators/{id}")
-    public ResponseEntity<Administrator> updateAdministrator(
+    public ResponseEntity<Void> updateAdministrator(
             @PathVariable Long id,
             @RequestBody AdministratorRequest request
     ) {
-        return ResponseEntity.ok(peopleService.updateAdministrator(id, request));
+        UpdateAdministratorRequest updateRequest = new UpdateAdministratorRequest();
+        updateRequest.setId(id);
+        updateRequest.setFullName(request.getFullName());
+        updateRequest.setCpf(request.getCpf());
+        updateRequest.setPhoneNumber(request.getPhoneNumber());
+        
+        peopleService.updateAdministrator(updateRequest);
+        return ResponseEntity.ok().build();
     }
 }

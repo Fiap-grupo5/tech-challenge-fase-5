@@ -6,6 +6,9 @@ import br.com.fiap.tech.people.domain.Patient;
 import br.com.fiap.tech.people.dto.AdministratorRequest;
 import br.com.fiap.tech.people.dto.DoctorRequest;
 import br.com.fiap.tech.people.dto.PatientRequest;
+import br.com.fiap.tech.people.dto.UpdateAdministratorRequest;
+import br.com.fiap.tech.people.dto.UpdateDoctorRequest;
+import br.com.fiap.tech.people.dto.UpdatePatientRequest;
 import br.com.fiap.tech.people.events.UserCreatedEvent;
 import br.com.fiap.tech.people.repository.AdministratorRepository;
 import br.com.fiap.tech.people.repository.DoctorRepository;
@@ -242,31 +245,6 @@ public class PeopleService {
             }
             doctor.setPhoneNumber(phoneNumber);
         }
-        if (request.getBirthDate() != null) {
-            doctor.setBirthDate(request.getBirthDate());
-        }
-        if (request.getAddress() != null) {
-            doctor.setAddress(request.getAddress());
-        }
-        if (request.getCity() != null) {
-            doctor.setCity(request.getCity());
-        }
-        if (request.getState() != null) {
-            // Garantir que o estado tenha no máximo 2 caracteres
-            String state = request.getState();
-            if (state.length() > 2) {
-                state = state.substring(0, 2);
-            }
-            doctor.setState(state);
-        }
-        if (request.getZipCode() != null) {
-            // Garantir que o CEP tenha no máximo 8 caracteres
-            String zipCode = request.getZipCode();
-            if (zipCode.length() > 8) {
-                zipCode = zipCode.substring(0, 8);
-            }
-            doctor.setZipCode(zipCode);
-        }
 
         doctorRepository.save(doctor);
     }
@@ -294,31 +272,6 @@ public class PeopleService {
                 phoneNumber = phoneNumber.substring(0, 20);
             }
             administrator.setPhoneNumber(phoneNumber);
-        }
-        if (request.getBirthDate() != null) {
-            administrator.setBirthDate(request.getBirthDate());
-        }
-        if (request.getAddress() != null) {
-            administrator.setAddress(request.getAddress());
-        }
-        if (request.getCity() != null) {
-            administrator.setCity(request.getCity());
-        }
-        if (request.getState() != null) {
-            // Garantir que o estado tenha no máximo 2 caracteres
-            String state = request.getState();
-            if (state.length() > 2) {
-                state = state.substring(0, 2);
-            }
-            administrator.setState(state);
-        }
-        if (request.getZipCode() != null) {
-            // Garantir que o CEP tenha no máximo 8 caracteres
-            String zipCode = request.getZipCode();
-            if (zipCode.length() > 8) {
-                zipCode = zipCode.substring(0, 8);
-            }
-            administrator.setZipCode(zipCode);
         }
 
         administratorRepository.save(administrator);
