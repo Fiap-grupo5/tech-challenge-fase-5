@@ -24,12 +24,13 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      test: ["CMD", "nc", "-z", "localhost", "29092"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,41 +47,25 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres && psql -U postgres -c '\\l' | grep healthcare_identity"]
       interval: 10s
       timeout: 5s
-      retries: 5
-
-  config-service:
-    build: ./config-service
-    ports:
-      - "8888:8888"
-    environment:
-      SPRING_PROFILES_ACTIVE: native
-      CONFIG_USERNAME: config
-      CONFIG_PASSWORD: config123
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   identity-service:
     build: ./identity-service
     depends_on:
-      kafka:
-        condition: service_healthy
       postgres:
         condition: service_healthy
-      config-service:
+      kafka:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthcare_identity
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_CLOUD_CONFIG_URI: http://config-service:8888
-      SPRING_CLOUD_CONFIG_USERNAME: config
-      SPRING_CLOUD_CONFIG_PASSWORD: config123
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret}
     ports:
       - "8081:8081"
@@ -89,25 +74,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   people-service:
     build: ./people-service
     depends_on:
-      kafka:
-        condition: service_healthy
       postgres:
         condition: service_healthy
-      identity-service:
+      kafka:
         condition: service_healthy
-      config-service:
+      identity-service:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthcare_people
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_CLOUD_CONFIG_URI: http://config-service:8888
-      SPRING_CLOUD_CONFIG_USERNAME: config
-      SPRING_CLOUD_CONFIG_PASSWORD: config123
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       IDENTITY_SERVICE_URL: http://identity-service:8081
     ports:
       - "8082:8082"
@@ -116,27 +99,25 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   facility-service:
     build: ./facility-service
     depends_on:
-      kafka:
-        condition: service_healthy
       postgres:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
       identity-service:
         condition: service_healthy
       people-service:
         condition: service_healthy
-      config-service:
-        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthcare_facility
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_CLOUD_CONFIG_URI: http://config-service:8888
-      SPRING_CLOUD_CONFIG_USERNAME: config
-      SPRING_CLOUD_CONFIG_PASSWORD: config123
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       IDENTITY_SERVICE_URL: http://identity-service:8081
       PEOPLE_SERVICE_URL: http://people-service:8082
     ports:
@@ -146,13 +127,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   scheduling-service:
     build: ./scheduling-service
     depends_on:
-      kafka:
-        condition: service_healthy
       postgres:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
       identity-service:
         condition: service_healthy
@@ -160,15 +142,12 @@ services:
         condition: service_healthy
       facility-service:
         condition: service_healthy
-      config-service:
-        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthcare_scheduling
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_CLOUD_CONFIG_URI: http://config-service:8888
-      SPRING_CLOUD_CONFIG_USERNAME: config
-      SPRING_CLOUD_CONFIG_PASSWORD: config123
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       IDENTITY_SERVICE_URL: http://identity-service:8081
       PEOPLE_SERVICE_URL: http://people-service:8082
       FACILITY_SERVICE_URL: http://facility-service:8084
@@ -179,6 +158,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
 volumes:
   postgres_data:

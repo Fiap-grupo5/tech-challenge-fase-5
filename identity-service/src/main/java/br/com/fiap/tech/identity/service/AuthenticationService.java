@@ -8,7 +8,6 @@ import br.com.fiap.tech.identity.dto.RegisterRequest;
 import br.com.fiap.tech.identity.events.UserCreatedEvent;
 import br.com.fiap.tech.identity.repository.UserRepository;
 import br.com.fiap.tech.identity.security.JwtService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,7 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class AuthenticationService {
 
     private final UserRepository userRepository;
@@ -24,6 +22,20 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final StreamBridge streamBridge;
+
+    public AuthenticationService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            AuthenticationManager authenticationManager,
+            StreamBridge streamBridge
+    ) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+        this.streamBridge = streamBridge;
+    }
 
     public AuthenticationResponse register(RegisterRequest request) {
         var user = User.builder()

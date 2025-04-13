@@ -1,15 +1,15 @@
 CREATE TABLE patients (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
     cpf VARCHAR(11) NOT NULL UNIQUE,
-    birth_date DATE NOT NULL,
-    gender VARCHAR(10),
-    phone_number VARCHAR(20) NOT NULL,
-    emergency_contact VARCHAR(20),
-    blood_type VARCHAR(5),
-    allergies TEXT,
+    national_health_card VARCHAR(20),
+    birth_date DATE,
+    phone_number VARCHAR(20),
+    address VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(2),
+    zip_code VARCHAR(8),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -17,12 +17,11 @@ CREATE TABLE patients (
 CREATE TABLE doctors (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
     crm VARCHAR(20) NOT NULL UNIQUE,
     specialty VARCHAR(100) NOT NULL,
-    sub_specialty VARCHAR(100),
-    phone_number VARCHAR(20) NOT NULL,
+    phone_number VARCHAR(20),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -30,11 +29,9 @@ CREATE TABLE doctors (
 CREATE TABLE administrators (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
-    registration_number VARCHAR(20) NOT NULL UNIQUE,
-    department VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    phone_number VARCHAR(20),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -56,9 +53,11 @@ CREATE TABLE medical_records (
 
 CREATE INDEX idx_patients_user ON patients(user_id);
 CREATE INDEX idx_patients_cpf ON patients(cpf);
+CREATE INDEX idx_patients_national_health_card ON patients(national_health_card);
 CREATE INDEX idx_doctors_user ON doctors(user_id);
 CREATE INDEX idx_doctors_crm ON doctors(crm);
+CREATE INDEX idx_doctors_cpf ON doctors(cpf);
 CREATE INDEX idx_administrators_user ON administrators(user_id);
-CREATE INDEX idx_administrators_registration ON administrators(registration_number);
+CREATE INDEX idx_administrators_cpf ON administrators(cpf);
 CREATE INDEX idx_medical_records_patient ON medical_records(patient_id);
 CREATE INDEX idx_medical_records_doctor ON medical_records(doctor_id);

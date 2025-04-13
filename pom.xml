@@ -17,7 +17,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>config-service</module>
         <module>identity-service</module>
         <module>people-service</module>
         <module>scheduling-service</module>
