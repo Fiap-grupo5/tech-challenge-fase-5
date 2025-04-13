@@ -25,11 +25,15 @@ public class AuthenticationController {
 
     @Operation(
         summary = "Register a new user",
-        description = "Creates a new user account with the provided credentials and role"
+        description = "Creates a new user account with the provided credentials and role. " +
+                     "Required fields for all types: username, password, userType, fullName, cpf. " +
+                     "Additional required fields for doctors: crm, specialty. " +
+                     "Additional required fields for patients: nationalHealthCard. " +
+                     "Optional fields for all types: phoneNumber, birthDate, address, city, state, zipCode."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User successfully registered"),
-        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data or missing required fields"),
         @ApiResponse(responseCode = "409", description = "User already exists")
     })
     @PostMapping("/register")

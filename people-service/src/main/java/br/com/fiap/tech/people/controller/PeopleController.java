@@ -36,11 +36,11 @@ public class PeopleController {
 
     @Operation(
         summary = "Update patient",
-        description = "Updates patient information"
+        description = "Updates patient information. Required fields: fullName, cpf. Optional fields: nationalHealthCard, birthDate, phoneNumber, address, city, state, zipCode"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Patient updated successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data or missing required fields"),
         @ApiResponse(responseCode = "404", description = "Patient not found")
     })
     @PutMapping("/patients/{id}")
@@ -66,11 +66,11 @@ public class PeopleController {
 
     @Operation(
         summary = "Update doctor",
-        description = "Updates doctor information"
+        description = "Updates doctor information. Required fields: fullName, cpf, crm, specialty. Optional fields: phoneNumber"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Doctor updated successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data or missing required fields"),
         @ApiResponse(responseCode = "404", description = "Doctor not found")
     })
     @PutMapping("/doctors/{id}")
@@ -96,11 +96,11 @@ public class PeopleController {
 
     @Operation(
         summary = "Update administrator",
-        description = "Updates administrator information"
+        description = "Updates administrator information. Required fields: fullName, cpf. Optional fields: phoneNumber"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Administrator updated successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data or missing required fields"),
         @ApiResponse(responseCode = "404", description = "Administrator not found")
     })
     @PutMapping("/administrators/{id}")

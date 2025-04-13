@@ -40,9 +40,10 @@ spring:
         binder:
           brokers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
       bindings:
-        userCreatedOutput:
+        userCreatedOutput-out-0:
           destination: user-created
           contentType: application/json
+          group: identity-service-group
 
 management:
   endpoints:

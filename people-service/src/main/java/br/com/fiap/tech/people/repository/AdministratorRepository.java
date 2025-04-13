@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface AdministratorRepository extends JpaRepository<Administrator, Long> {
     Optional<Administrator> findByCpf(String cpf);
+    Optional<Administrator> findByUserId(Long userId);
 }

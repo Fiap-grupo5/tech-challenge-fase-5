@@ -40,7 +40,7 @@ spring:
         binder:
           brokers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
       bindings:
-        userCreatedInput:
+        userCreatedInput-in-0:
           destination: user-created
           contentType: application/json
           group: people-service-group

@@ -18,7 +18,6 @@ public class UserEventConsumer {
     @Bean
     public Consumer<UserCreatedEvent> userCreatedInput() {
         return event -> {
-            log.info("Received UserCreatedEvent for user: {}", event.getUserId());
             peopleService.handleUserCreated(event);
         };
     }

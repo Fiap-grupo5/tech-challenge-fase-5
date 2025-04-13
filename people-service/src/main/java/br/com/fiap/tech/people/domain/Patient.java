@@ -18,7 +18,11 @@ import java.time.LocalDateTime;
 public class Patient {
     
     @Id
-    private Long id; // Same as user_id from Identity Service
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
     
     @Column(nullable = false)
     private String fullName;
@@ -41,8 +45,10 @@ public class Patient {
     
     private String zipCode;
     
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
     
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
     @PrePersist
