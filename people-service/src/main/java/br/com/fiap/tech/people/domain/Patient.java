@@ -31,7 +31,10 @@ public class Patient {
     private String cpf;
     
     @Column(name = "national_health_card")
-    private String nationalHealthCard; // CNS - Cartão SUS
+    private String nationalHealthCard; // NHS - National Health Service Card
+    
+    @Column(nullable = false)
+    private String email;
     
     private LocalDate birthDate;
     

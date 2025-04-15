@@ -29,6 +29,9 @@ public class Administrator {
     @Column(nullable = false)
     private String cpf;
     
+    @Column(nullable = false)
+    private String email;
+    
     private String phoneNumber;
     
     @Column(name = "created_at")

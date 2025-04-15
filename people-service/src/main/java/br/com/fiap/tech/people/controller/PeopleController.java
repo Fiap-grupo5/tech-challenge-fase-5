@@ -139,4 +139,30 @@ public class PeopleController {
         peopleService.updateAdministrator(updateRequest);
         return ResponseEntity.ok().build();
     }
+
+    @Operation(
+        summary = "Check if CPF exists",
+        description = "Verifies if the provided CPF is already registered in the system"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Verification completed successfully")
+    })
+    @GetMapping("/check-cpf")
+    public ResponseEntity<Boolean> checkCpfExists(@RequestParam("cpf") String cpf) {
+        boolean exists = peopleService.checkCpfExists(cpf);
+        return ResponseEntity.ok(exists);
+    }
+
+    @Operation(
+        summary = "Check if CRM exists",
+        description = "Verifies if the provided CRM is already registered in the system"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Verification completed successfully")
+    })
+    @GetMapping("/check-crm")
+    public ResponseEntity<Boolean> checkCrmExists(@RequestParam("crm") String crm) {
+        boolean exists = peopleService.checkCrmExists(crm);
+        return ResponseEntity.ok(exists);
+    }
 }

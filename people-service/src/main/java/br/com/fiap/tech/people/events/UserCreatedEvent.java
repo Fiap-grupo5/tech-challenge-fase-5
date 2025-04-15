@@ -15,6 +15,7 @@ public class UserCreatedEvent {
     private String userType;
     private String fullName;
     private String cpf;
+    private String email;
     private String crm;
     private String specialty;
     private String nationalHealthCard;

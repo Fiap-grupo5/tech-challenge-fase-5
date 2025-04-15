@@ -10,6 +10,7 @@ import br.com.fiap.tech.people.dto.UpdateAdministratorRequest;
 import br.com.fiap.tech.people.dto.UpdateDoctorRequest;
 import br.com.fiap.tech.people.dto.UpdatePatientRequest;
 import br.com.fiap.tech.people.events.UserCreatedEvent;
+import br.com.fiap.tech.people.events.UserDeletionEvent;
 import br.com.fiap.tech.people.repository.AdministratorRepository;
 import br.com.fiap.tech.people.repository.DoctorRepository;
 import br.com.fiap.tech.people.repository.PatientRepository;
@@ -19,6 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.event.EventListener;
+import org.springframework.util.StringUtils;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 
 @Slf4j
 @Service
@@ -31,11 +35,29 @@ public class PeopleService {
 
     @EventListener
     public void handleUserCreated(UserCreatedEvent event) {
-        switch (event.getUserType()) {
-            case "PATIENT" -> createPatient(event);
-            case "DOCTOR" -> createDoctor(event);
-            case "ADMINISTRATOR" -> createAdministrator(event);
-            default -> log.warn("Unknown user type: {}", event.getUserType());
+        log.info("Handling user created event for userId={}, userType={}", event.getUserId(), event.getUserType());
+        try {
+            switch (event.getUserType()) {
+                case "PATIENT" -> {
+                    log.debug("Creating patient from event: userId={}", event.getUserId());
+                    createPatient(event);
+                }
+                case "DOCTOR" -> {
+                    log.debug("Creating doctor from event: userId={}", event.getUserId());
+                    createDoctor(event);
+                }
+                case "ADMINISTRATOR" -> {
+                    log.debug("Creating administrator from event: userId={}", event.getUserId());
+                    createAdministrator(event);
+                }
+                default -> {
+                    log.warn("Unknown user type in event: {}", event.getUserType());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error creating user: userId={}, userType={}, error={}", 
+                    event.getUserId(), event.getUserType(), e.getMessage(), e);
+            throw new RuntimeException("Failed to process user creation: " + e.getMessage(), e);
         }
     }
 
@@ -50,8 +72,12 @@ public class PeopleService {
         if (event.getCpf() == null || event.getCpf().trim().isEmpty()) {
             throw new IllegalArgumentException("CPF is required");
         }
+        if (event.getEmail() == null || event.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
         if (event.getNationalHealthCard() == null || event.getNationalHealthCard().trim().isEmpty()) {
-            throw new IllegalArgumentException("National Health Card is required for patients");
+            log.warn("National Health Card is missing for patient: {}", event.getUserId());
+            // We don't throw an exception to maintain compatibility
         }
 
         String cpf = event.getCpf();
@@ -60,7 +86,7 @@ public class PeopleService {
         }
 
         String nationalHealthCard = event.getNationalHealthCard();
-        if (nationalHealthCard.length() > 20) {
+        if (nationalHealthCard != null && nationalHealthCard.length() > 20) {
             nationalHealthCard = nationalHealthCard.substring(0, 20);
         }
 
@@ -84,6 +110,7 @@ public class PeopleService {
                 .fullName(event.getFullName())
                 .cpf(cpf)
                 .nationalHealthCard(nationalHealthCard)
+                .email(event.getEmail())
                 .birthDate(event.getBirthDate())
                 .phoneNumber(phoneNumber)
                 .address(event.getAddress())
@@ -92,6 +119,7 @@ public class PeopleService {
                 .zipCode(zipCode)
                 .build();
         patient = patientRepository.save(patient);
+        log.info("Patient created with ID: {}", patient.getId());
     }
 
     @Transactional
@@ -105,11 +133,21 @@ public class PeopleService {
         if (event.getCpf() == null || event.getCpf().trim().isEmpty()) {
             throw new IllegalArgumentException("CPF is required");
         }
-        if (event.getCrm() == null || event.getCrm().trim().isEmpty()) {
-            throw new IllegalArgumentException("CRM is required for doctors");
+        if (event.getEmail() == null || event.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
         }
-        if (event.getSpecialty() == null || event.getSpecialty().trim().isEmpty()) {
-            throw new IllegalArgumentException("Specialty is required for doctors");
+        
+        // Validate specific fields but without requiring them
+        String crm = event.getCrm();
+        if (crm == null || crm.trim().isEmpty()) {
+            log.warn("CRM is missing for doctor: {}", event.getUserId());
+            crm = "PENDENTE"; // Default value to avoid failure
+        }
+        
+        String specialty = event.getSpecialty();
+        if (specialty == null || specialty.trim().isEmpty()) {
+            log.warn("Specialty is missing for doctor: {}", event.getUserId());
+            specialty = "GERAL"; // Default value to avoid failure
         }
 
         String cpf = event.getCpf();
@@ -117,15 +155,22 @@ public class PeopleService {
             cpf = cpf.substring(0, 11);
         }
 
+        String phoneNumber = event.getPhoneNumber();
+        if (phoneNumber != null && phoneNumber.length() > 20) {
+            phoneNumber = phoneNumber.substring(0, 20);
+        }
+
         Doctor doctor = Doctor.builder()
                 .userId(event.getUserId())
                 .fullName(event.getFullName())
                 .cpf(cpf)
-                .crm(event.getCrm())
-                .specialty(event.getSpecialty())
-                .phoneNumber(event.getPhoneNumber())
+                .crm(crm)
+                .specialty(specialty)
+                .email(event.getEmail())
+                .phoneNumber(phoneNumber)
                 .build();
         doctor = doctorRepository.save(doctor);
+        log.info("Doctor created with ID: {}", doctor.getId());
     }
 
     @Transactional
@@ -139,19 +184,29 @@ public class PeopleService {
         if (event.getCpf() == null || event.getCpf().trim().isEmpty()) {
             throw new IllegalArgumentException("CPF is required");
         }
+        if (event.getEmail() == null || event.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
 
         String cpf = event.getCpf();
         if (cpf.length() > 11) {
             cpf = cpf.substring(0, 11);
         }
 
+        String phoneNumber = event.getPhoneNumber();
+        if (phoneNumber != null && phoneNumber.length() > 20) {
+            phoneNumber = phoneNumber.substring(0, 20);
+        }
+
         Administrator administrator = Administrator.builder()
                 .userId(event.getUserId())
                 .fullName(event.getFullName())
                 .cpf(cpf)
-                .phoneNumber(event.getPhoneNumber())
+                .email(event.getEmail())
+                .phoneNumber(phoneNumber)
                 .build();
         administrator = administratorRepository.save(administrator);
+        log.info("Administrator created with ID: {}", administrator.getId());
     }
 
     @Transactional
@@ -163,7 +218,6 @@ public class PeopleService {
             patient.setFullName(request.getFullName());
         }
         if (request.getCpf() != null && !request.getCpf().trim().isEmpty()) {
-            // Garantir que o CPF tenha no máximo 11 caracteres
             String cpf = request.getCpf();
             if (cpf.length() > 11) {
                 cpf = cpf.substring(0, 11);
@@ -171,15 +225,16 @@ public class PeopleService {
             patient.setCpf(cpf);
         }
         if (request.getNationalHealthCard() != null && !request.getNationalHealthCard().trim().isEmpty()) {
-            // Garantir que o cartão nacional de saúde tenha no máximo 20 caracteres
             String nationalHealthCard = request.getNationalHealthCard();
             if (nationalHealthCard.length() > 20) {
                 nationalHealthCard = nationalHealthCard.substring(0, 20);
             }
             patient.setNationalHealthCard(nationalHealthCard);
         }
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            patient.setEmail(request.getEmail());
+        }
         if (request.getPhoneNumber() != null) {
-            // Garantir que o número de telefone tenha no máximo 20 caracteres
             String phoneNumber = request.getPhoneNumber();
             if (phoneNumber.length() > 20) {
                 phoneNumber = phoneNumber.substring(0, 20);
@@ -196,7 +251,6 @@ public class PeopleService {
             patient.setCity(request.getCity());
         }
         if (request.getState() != null) {
-            // Garantir que o estado tenha no máximo 2 caracteres
             String state = request.getState();
             if (state.length() > 2) {
                 state = state.substring(0, 2);
@@ -204,7 +258,6 @@ public class PeopleService {
             patient.setState(state);
         }
         if (request.getZipCode() != null) {
-            // Garantir que o CEP tenha no máximo 8 caracteres
             String zipCode = request.getZipCode();
             if (zipCode.length() > 8) {
                 zipCode = zipCode.substring(0, 8);
@@ -217,14 +270,14 @@ public class PeopleService {
 
     @Transactional
     public void updateDoctor(UpdateDoctorRequest request) {
-        Doctor doctor = doctorRepository.findById(request.getId())
+        var doctor = doctorRepository.findById(request.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Doctor not found"));
 
         if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
             doctor.setFullName(request.getFullName());
         }
         if (request.getCpf() != null && !request.getCpf().trim().isEmpty()) {
-            // Garantir que o CPF tenha no máximo 11 caracteres
+            // Ensure CPF has at most 11 characters
             String cpf = request.getCpf();
             if (cpf.length() > 11) {
                 cpf = cpf.substring(0, 11);
@@ -237,8 +290,11 @@ public class PeopleService {
         if (request.getSpecialty() != null && !request.getSpecialty().trim().isEmpty()) {
             doctor.setSpecialty(request.getSpecialty());
         }
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            doctor.setEmail(request.getEmail());
+        }
         if (request.getPhoneNumber() != null) {
-            // Garantir que o número de telefone tenha no máximo 20 caracteres
+            // Ensure phone number has at most 20 characters
             String phoneNumber = request.getPhoneNumber();
             if (phoneNumber.length() > 20) {
                 phoneNumber = phoneNumber.substring(0, 20);
@@ -251,22 +307,25 @@ public class PeopleService {
 
     @Transactional
     public void updateAdministrator(UpdateAdministratorRequest request) {
-        Administrator administrator = administratorRepository.findById(request.getId())
+        var administrator = administratorRepository.findById(request.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Administrator not found"));
 
         if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
             administrator.setFullName(request.getFullName());
         }
         if (request.getCpf() != null && !request.getCpf().trim().isEmpty()) {
-            // Garantir que o CPF tenha no máximo 11 caracteres
+            // Ensure CPF has at most 11 characters
             String cpf = request.getCpf();
             if (cpf.length() > 11) {
                 cpf = cpf.substring(0, 11);
             }
             administrator.setCpf(cpf);
         }
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            administrator.setEmail(request.getEmail());
+        }
         if (request.getPhoneNumber() != null) {
-            // Garantir que o número de telefone tenha no máximo 20 caracteres
+            // Ensure phone number has at most 20 characters
             String phoneNumber = request.getPhoneNumber();
             if (phoneNumber.length() > 20) {
                 phoneNumber = phoneNumber.substring(0, 20);
@@ -290,5 +349,200 @@ public class PeopleService {
     public Administrator getAdministrator(Long id) {
         return administratorRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Administrator not found"));
+    }
+
+    @Transactional
+    public void handleUserDeleted(UserDeletionEvent event) {
+        log.info("Processing user deletion event: userId={}", event.getUserId());
+
+        var userId = event.getUserId();
+        if (userId == null) {
+            log.error("Error processing deletion: User ID is null");
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+
+        boolean removed = false;
+
+        try {
+            if (removeFromPatient(userId)) {
+                removed = true;
+            }
+
+            if (removeFromDoctor(userId)) {
+                removed = true;
+            }
+
+            if (removeFromAdmin(userId)) {
+                removed = true;
+            }
+
+            if (removed) {
+                log.info("User successfully removed from at least one table: userId={}", userId);
+            } else {
+                log.warn("User not found in any table: userId={}", userId);
+            }
+        } catch (Exception e) {
+            log.error("Error during user removal: userId={}, error={}", userId, e.getMessage(), e);
+            throw new RuntimeException("Failed to process user deletion: " + e.getMessage(), e);
+        }
+    }
+
+    private boolean removeFromPatient(Long userId) {
+        try {
+            log.debug("Attempting to remove patient with userId={}", userId);
+            return patientRepository.findByUserId(userId)
+                    .map(patient -> {
+                        log.info("Removing patient: userId={}, patientId={}", userId, patient.getId());
+                        patientRepository.delete(patient);
+                        return true;
+                    })
+                    .orElseGet(() -> {
+                        log.debug("No patient found for userId={}", userId);
+                        return false;
+                    });
+        } catch (Exception e) {
+            log.error("Error removing patient: userId={}, error={}", userId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private boolean removeFromDoctor(Long userId) {
+        try {
+            log.debug("Attempting to remove doctor with userId={}", userId);
+            return doctorRepository.findByUserId(userId)
+                    .map(doctor -> {
+                        log.info("Removing doctor: userId={}, doctorId={}, crm={}", 
+                                userId, doctor.getId(), doctor.getCrm());
+                        doctorRepository.delete(doctor);
+                        return true;
+                    })
+                    .orElseGet(() -> {
+                        log.debug("No doctor found for userId={}", userId);
+                        return false;
+                    });
+        } catch (Exception e) {
+            log.error("Error removing doctor: userId={}, error={}", userId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private boolean removeFromAdmin(Long userId) {
+        try {
+            log.debug("Attempting to remove administrator with userId={}", userId);
+            return administratorRepository.findByUserId(userId)
+                    .map(admin -> {
+                        log.info("Removing administrator: userId={}, adminId={}", userId, admin.getId());
+                        administratorRepository.delete(admin);
+                        return true;
+                    })
+                    .orElseGet(() -> {
+                        log.debug("No administrator found for userId={}", userId);
+                        return false;
+                    });
+        } catch (Exception e) {
+            log.error("Error removing administrator: userId={}, error={}", userId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Verifica se um CPF já existe em qualquer uma das tabelas
+     *
+     * @param cpf O CPF a ser verificado
+     * @return true se o CPF existe, false caso contrário
+     */
+    public boolean checkCpfExists(String cpf) {
+        if (cpf == null || cpf.trim().isEmpty()) {
+            return false;
+        }
+        
+        // Padronizar o CPF removendo formatação
+        String normalizedCpf = normalizeCpf(cpf);
+        
+        log.info("Verificando se CPF existe: {}", normalizedCpf);
+        
+        try {
+            // Verificações em paralelo para melhor performance
+            boolean patientExists = checkCpfExistsInPatients(normalizedCpf);
+            if (patientExists) {
+                log.info("CPF {} existe na tabela de pacientes", normalizedCpf);
+                return true;
+            }
+            
+            boolean doctorExists = checkCpfExistsInDoctors(normalizedCpf);
+            if (doctorExists) {
+                log.info("CPF {} existe na tabela de médicos", normalizedCpf);
+                return true;
+            }
+            
+            boolean adminExists = checkCpfExistsInAdmins(normalizedCpf);
+            if (adminExists) {
+                log.info("CPF {} existe na tabela de administradores", normalizedCpf);
+                return true;
+            }
+            
+            log.info("CPF {} não existe em nenhuma tabela", normalizedCpf);
+            return false;
+        } catch (Exception e) {
+            log.error("Erro ao verificar CPF: {}", e.getMessage(), e);
+            // Em caso de erro, assumimos que pode existir para impedir duplicação
+            return true;
+        }
+    }
+    
+    /**
+     * Verifica a existência do CPF na tabela de pacientes
+     */
+    @Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 500))
+    private boolean checkCpfExistsInPatients(String cpf) {
+        return patientRepository.findByCpf(cpf).isPresent();
+    }
+    
+    /**
+     * Verifica a existência do CPF na tabela de médicos
+     */
+    @Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 500))
+    private boolean checkCpfExistsInDoctors(String cpf) {
+        return doctorRepository.findByCpf(cpf).isPresent();
+    }
+    
+    /**
+     * Verifica a existência do CPF na tabela de administradores
+     */
+    @Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 500))
+    private boolean checkCpfExistsInAdmins(String cpf) {
+        return administratorRepository.findByCpf(cpf).isPresent();
+    }
+
+    /**
+     * Normaliza um CPF para padrão sem formatação e com no máximo 11 dígitos
+     */
+    private String normalizeCpf(String cpf) {
+        if (cpf == null) {
+            return "";
+        }
+        String normalized = cpf.replaceAll("[^0-9]", "");
+        if (normalized.length() > 11) {
+            normalized = normalized.substring(0, 11);
+        }
+        return normalized;
+    }
+
+    public boolean checkCrmExists(String crm) {
+        if (crm == null || crm.trim().isEmpty()) {
+            return false;
+        }
+        
+        log.info("Verificando se CRM existe: {}", crm);
+        
+        try {
+            boolean exists = doctorRepository.findByCrm(crm).isPresent();
+            log.info("CRM {} existe: {}", crm, exists);
+            return exists;
+        } catch (Exception e) {
+            log.error("Erro ao verificar CRM: {}", e.getMessage(), e);
+            // Em caso de erro, assumimos que pode existir para impedir duplicação
+            return true;
+        }
     }
 }

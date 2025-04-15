@@ -13,5 +13,6 @@ public class UpdateAdministratorRequest {
     private Long id;
     private String fullName;
     private String cpf;
+    private String email;
     private String phoneNumber;
 } 

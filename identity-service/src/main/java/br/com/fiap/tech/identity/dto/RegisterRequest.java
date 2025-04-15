@@ -17,18 +17,19 @@ public class RegisterRequest {
     private String password;
     private UserType userType;
     
-    // Campos obrigatórios para todos os tipos
+    // Required fields for all user types
     private String fullName;
     private String cpf;
+    private String email;
     
-    // Campos obrigatórios específicos para Doctor
+    // Required fields specific for Doctor
     private String crm;
     private String specialty;
     
-    // Campos obrigatórios específicos para Patient
+    // Required fields specific for Patient
     private String nationalHealthCard;
     
-    // Campos opcionais
+    // Optional fields
     private String phoneNumber;
     private LocalDate birthDate;
     private String address;

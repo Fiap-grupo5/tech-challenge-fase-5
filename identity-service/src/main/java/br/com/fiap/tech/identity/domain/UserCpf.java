@@ -1,4 +1,4 @@
-package br.com.fiap.tech.people.domain;
+package br.com.fiap.tech.identity.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -13,37 +13,31 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "doctors")
-public class Doctor {
+@Table(name = "user_cpfs", indexes = {
+    @Index(name = "idx_user_cpfs_cpf", columnList = "cpf", unique = true)
+})
+public class UserCpf {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
-    
-    @Column(nullable = false)
-    private String fullName;
-    
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String cpf;
     
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+    
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String crm;
+    private UserType userType;
     
     @Column(nullable = false)
-    private String specialty;
+    private String username;
     
-    @Column(nullable = false)
-    private String email;
-    
-    private String phoneNumber;
-    
-    @Column(name = "created_at")
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
     @PrePersist
@@ -56,4 +50,4 @@ public class Doctor {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-}
+} 

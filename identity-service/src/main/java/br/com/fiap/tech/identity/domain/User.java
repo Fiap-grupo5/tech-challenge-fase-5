@@ -30,6 +30,9 @@ public class User {
     @Column(nullable = false)
     private UserType userType;
     
+    @Column
+    private String email;
+    
     private LocalDateTime createdAt;
     
     private LocalDateTime updatedAt;

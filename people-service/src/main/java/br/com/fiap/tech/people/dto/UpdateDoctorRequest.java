@@ -15,5 +15,6 @@ public class UpdateDoctorRequest {
     private String cpf;
     private String crm;
     private String specialty;
+    private String email;
     private String phoneNumber;
 } 

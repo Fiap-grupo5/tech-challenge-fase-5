@@ -16,8 +16,9 @@ public class UpdatePatientRequest {
     private String fullName;
     private String cpf;
     private String nationalHealthCard;
-    private String phoneNumber;
+    private String email;
     private LocalDate birthDate;
+    private String phoneNumber;
     private String address;
     private String city;
     private String state;

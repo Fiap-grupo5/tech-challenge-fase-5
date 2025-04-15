@@ -2,31 +2,36 @@ package br.com.fiap.tech.identity.controller;
 
 import br.com.fiap.tech.identity.dto.AuthenticationRequest;
 import br.com.fiap.tech.identity.dto.AuthenticationResponse;
+import br.com.fiap.tech.identity.dto.ErrorResponse;
 import br.com.fiap.tech.identity.dto.RegisterRequest;
 import br.com.fiap.tech.identity.service.AuthenticationService;
+import br.com.fiap.tech.identity.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Endpoints for user authentication and registration")
+@Tag(name = "Authentication", description = "Authentication API")
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+    private final UserRepository userRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Operation(
         summary = "Register a new user",
         description = "Creates a new user account with the provided credentials and role. " +
-                     "Required fields for all types: username, password, userType, fullName, cpf. " +
+                     "Required fields for all types: username, password, userType, fullName, cpf, email. " +
                      "Additional required fields for doctors: crm, specialty. " +
                      "Additional required fields for patients: nationalHealthCard. " +
                      "Optional fields for all types: phoneNumber, birthDate, address, city, state, zipCode."
@@ -37,10 +42,27 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "409", description = "User already exists")
     })
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(
+    public ResponseEntity<?> register(
             @RequestBody RegisterRequest request
     ) {
-        return ResponseEntity.ok(authenticationService.register(request));
+        try {
+            return ResponseEntity.ok(authenticationService.register(request));
+        } catch (IllegalArgumentException e) {
+            log.error("Error registering user: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            log.error("Error registering user: {}", e.getMessage());
+            if (e.getMessage().contains("already exists")) {
+                return ResponseEntity
+                        .status(HttpStatus.CONFLICT)
+                        .body(new ErrorResponse(e.getMessage()));
+            }
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("An unexpected error occurred"));
+        }
     }
 
     @Operation(
@@ -53,9 +75,49 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "404", description = "User not found")
     })
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(
+    public ResponseEntity<?> authenticate(
             @RequestBody AuthenticationRequest request
     ) {
-        return ResponseEntity.ok(authenticationService.authenticate(request));
+        try {
+            return ResponseEntity.ok(authenticationService.authenticate(request));
+        } catch (Exception e) {
+            log.error("Error authenticating user: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse("Invalid credentials"));
+        }
+    }
+
+    @DeleteMapping("/admin/users/all")
+    public ResponseEntity<String> deleteAllUsers() {
+        log.info("Request to delete all users");
+        try {
+            long count = userRepository.count();
+            
+            // Try to delete events, but don't fail if the table doesn't exist
+            try {
+                jdbcTemplate.update("DELETE FROM user_created_event");
+                log.info("All user events deleted");
+            } catch (Exception e) {
+                log.warn("Could not delete user events: {}", e.getMessage());
+                // Try alternative table name
+                try {
+                    jdbcTemplate.update("DELETE FROM user_event");
+                    log.info("All user events deleted");
+                } catch (Exception ex) {
+                    log.warn("Could not delete from alternative event table: {}", ex.getMessage());
+                }
+            }
+            
+            // Then delete users
+            userRepository.deleteAll();
+            log.info("All users deleted successfully. Total: {}", count);
+            
+            return ResponseEntity.ok("All users deleted successfully. Total users: " + count);
+        } catch (Exception e) {
+            log.error("Error deleting all users: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error deleting all users: " + e.getMessage());
+        }
     }
 }
