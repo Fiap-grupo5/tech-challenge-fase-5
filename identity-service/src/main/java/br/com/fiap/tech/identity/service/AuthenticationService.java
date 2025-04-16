@@ -61,46 +61,39 @@ public class AuthenticationService {
     public AuthenticationResponse register(RegisterRequest request) {
         log.info("Registering user with username: {} and CPF: {}", request.getUsername(), request.getCpf());
 
-        // Verificar se o username já existe
         if (userRepository.existsByUsername(request.getUsername())) {
-            log.error("Username já existe: {}", request.getUsername());
-            throw new IllegalArgumentException("Username já existe");
+            log.error("Username already exists.: {}", request.getUsername());
+            throw new IllegalArgumentException("Username already exists.");
         }
         
-        // Validar campos obrigatórios
         if (StringUtils.isEmpty(request.getFullName())) {
-            log.error("Nome completo é obrigatório");
-            throw new IllegalArgumentException("Nome completo é obrigatório");
+            log.error("Full name is mandatory.");
+            throw new IllegalArgumentException("Full name is mandatory.");
         }
         if (StringUtils.isEmpty(request.getCpf())) {
-            log.error("CPF é obrigatório");
-            throw new IllegalArgumentException("CPF é obrigatório");
+            log.error("CPF is mandatory.");
+            throw new IllegalArgumentException("CPF is mandatory.");
         }
         
-        // Normalizar o CPF
         String normalizedCpf = request.getCpf().replaceAll("[^0-9]", "");
         if (normalizedCpf.length() < 11) {
-            log.error("CPF inválido: deve conter 11 dígitos");
-            throw new IllegalArgumentException("CPF inválido: deve conter 11 dígitos");
+            log.error("Invalid CPF: it must contain 11 digits.");
+            throw new IllegalArgumentException("Invalid CPF: it must contain 11 digits.");
         }
-        // Modificar o CPF diretamente no request (já que @Data inclui setters)
         request.setCpf(normalizedCpf);
         
         if (StringUtils.isEmpty(request.getEmail())) {
-            log.error("Email é obrigatório");
-            throw new IllegalArgumentException("Email é obrigatório");
+            log.error("Email is mandatory.");
+            throw new IllegalArgumentException("Email is mandatory.");
         }
         
-        // Verificar se o CPF já existe (usando o serviço de sincronização)
         if (userCpfSyncService.checkCpfExists(request.getCpf())) {
-            log.error("CPF já cadastrado: {}", request.getCpf());
-            throw new IllegalArgumentException("CPF já cadastrado no sistema");
+            log.error("CPF already registered: {}", request.getCpf());
+            throw new IllegalArgumentException("CPF already registered in system");
         }
         
-        // Validar campos específicos por tipo de usuário
         validateTypeSpecificFields(request);
         
-        // Criar o usuário
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -111,10 +104,8 @@ public class AuthenticationService {
         user = userRepository.save(user);
         log.info("User registered successfully: {}", user.getUsername());
         
-        // Registrar o CPF localmente antes de enviar o evento
         userCpfSyncService.registerCpf(request.getCpf(), user, user.getUserType(), user.getUsername());
         
-        // Criar e enviar o evento
         UserCreatedEvent userCreatedEvent = createUserEvent(user, request);
         boolean sent = false;
         
@@ -124,64 +115,54 @@ public class AuthenticationService {
             log.info("Event sent successfully: {}", sent);
         } catch (Exception e) {
             log.error("Failed to send user created event: {}", e.getMessage(), e);
-            // Se falhar ao enviar o evento, removemos o usuário
             deleteUser(user.getId());
             throw new RuntimeException("Falha ao completar o processo de registro", e);
         }
 
-        // Se o evento foi enviado, retornamos o token
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
     }
     
-    /**
-     * Valida campos específicos por tipo de usuário
-     */
     private void validateTypeSpecificFields(RegisterRequest request) {
         if (UserType.DOCTOR.equals(request.getUserType())) {
             if (StringUtils.isEmpty(request.getCrm())) {
-                log.error("CRM é obrigatório para médicos");
-                throw new IllegalArgumentException("CRM é obrigatório para médicos");
+                log.error("CRM is mandatory for doctors.");
+                throw new IllegalArgumentException("CRM is mandatory for doctors.");
             }
             if (StringUtils.isEmpty(request.getSpecialty())) {
-                log.error("Especialidade é obrigatória para médicos");
-                throw new IllegalArgumentException("Especialidade é obrigatória para médicos");
+                log.error("Specialty is mandatory for doctors.");
+                throw new IllegalArgumentException("Specialty is mandatory for doctors.");
             }
             
-            // Verificar se o CRM já existe
             boolean crmExists = false;
             try {
                 crmExists = peopleServiceClient.checkCrmExists(request.getCrm());
                 if (crmExists) {
-                    log.error("CRM já registrado: {}", request.getCrm());
-                    throw new IllegalArgumentException("CRM já registrado");
+                    log.error("CRM already registered: {}", request.getCrm());
+                    throw new IllegalArgumentException("CRM already registered");
                 }
             } catch (Exception e) {
                 if (e instanceof IllegalArgumentException) {
-                    throw e; // Propaga a exceção se for relacionada ao CRM já existir
+                    throw e;
                 }
-                log.error("Erro ao verificar CRM: {}", e.getMessage());
-                throw new RuntimeException("Não foi possível validar o CRM. Por favor, tente novamente.");
+                log.error("Error while verifying CRM: {}", e.getMessage());
+                throw new RuntimeException("Unable to validate CRM. Please try again.");
             }
         } else if (UserType.PATIENT.equals(request.getUserType())) {
             if (StringUtils.isEmpty(request.getNationalHealthCard())) {
-                log.error("Cartão Nacional de Saúde é obrigatório para pacientes");
-                throw new IllegalArgumentException("Cartão Nacional de Saúde é obrigatório para pacientes");
+                log.error("National Health Card is mandatory for patients.");
+                throw new IllegalArgumentException("National Health Card is mandatory for patients.");
             }
         }
     }
 
     private UserCreatedEvent createUserEvent(User user, RegisterRequest request) {
-        // Normaliza o CPF antes de enviar no evento
         String normalizedCpf = request.getCpf();
         if (normalizedCpf == null || normalizedCpf.trim().isEmpty()) {
-            log.error("CPF está vazio para o usuário {}. Isso causará falha no processamento do evento.", user.getUsername());
-            // Fornecer um valor padrão para evitar falha na validação
-            // Em produção, seria melhor lançar uma exceção, mas para fins de demonstração
-            // estamos usando um valor temporário para permitir o processamento
-            normalizedCpf = "00000000000"; // Temporário, apenas para demonstração
+            log.error("CPF is empty for user {}. This will cause the event processing to fail.", user.getUsername());
+            normalizedCpf = "00000000000";
         } else {
             normalizedCpf = normalizedCpf.replaceAll("[^0-9]", "");
             if (normalizedCpf.length() > 11) {
@@ -192,7 +173,7 @@ public class AuthenticationService {
             }
         }
         
-        log.info("CPF normalizado para evento: {}", normalizedCpf);
+        log.info("CPF normalized for event.: {}", normalizedCpf);
         
         return UserCreatedEvent.builder()
                 .userId(user.getId())
@@ -219,7 +200,6 @@ public class AuthenticationService {
             userRepository.delete(user);
             log.info("User deleted with ID: {}", userId);
             
-            // Send deletion event
             try {
                 UserDeletionEvent deletionEvent = new UserDeletionEvent(userId);
                 boolean sent = streamBridge.send("userDeletedOutput-out-0", deletionEvent);

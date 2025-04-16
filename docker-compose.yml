@@ -99,7 +99,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 80s
 
   facility-service:
     build: ./facility-service
@@ -127,7 +127,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 80s
 
   scheduling-service:
     build: ./scheduling-service
@@ -158,7 +158,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 80s
 
 volumes:
   postgres_data:

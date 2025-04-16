@@ -34,46 +34,37 @@ public class UserCpfSyncService {
             return false;
         }
         
-        // Normalize o CPF
         String normalizedCpf = normalizeCpf(cpf);
         
-        // Verifica localmente primeiro (rápido)
         boolean localExists = userCpfRepository.existsByCpf(normalizedCpf);
         if (localExists) {
-            log.info("CPF {} já existe localmente", normalizedCpf);
+            log.info("CPF {} already exists locally.", normalizedCpf);
             return true;
         }
         
-        // Verifica remotamente (pode ser mais lento)
         try {
             boolean remoteExists = checkCpfExistsRemotely(normalizedCpf);
             if (remoteExists) {
-                log.info("CPF {} existe remotamente, sincronizando localmente", normalizedCpf);
-                // Se existe remotamente mas não localmente, salvamos localmente para futura referência
+                log.info("CPF {} exists remotely, synchronizing locally.", normalizedCpf);
                 saveCpfReference(normalizedCpf, null, null, null);
                 return true;
             }
         } catch (Exception e) {
-            log.error("Erro ao verificar CPF remotamente: {}", e.getMessage());
-            // Em caso de erro, assumimos que pode existir (fail safe)
+            log.error("Error while verifying CPF remotely: {}", e.getMessage());
             return true;
         }
         
         return false;
     }
     
-    /**
-     * Registra um CPF no sistema, tanto local quanto remotamente
-     */
+
     @Transactional
     public void registerCpf(String cpf, User user, UserType userType, String username) {
         String normalizedCpf = normalizeCpf(cpf);
         saveCpfReference(normalizedCpf, user, userType, username);
     }
     
-    /**
-     * Salva uma referência local de CPF
-     */
+
     @Transactional
     public void saveCpfReference(String cpf, User user, UserType userType, String username) {
         String normalizedCpf = normalizeCpf(cpf);
@@ -91,31 +82,20 @@ public class UserCpfSyncService {
                 .build();
         
         userCpfRepository.save(userCpf);
-        log.info("CPF {} registrado localmente", normalizedCpf);
+        log.info("CPF {} registered locally.", normalizedCpf);
     }
     
-    /**
-     * Verifica remotamente se um CPF existe
-     * Com retry pattern para lidar com falhas temporárias
-     */
     @Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     public boolean checkCpfExistsRemotely(String cpf) {
         return peopleServiceClient.checkCpfExists(cpf);
     }
     
-    /**
-     * Job que roda periodicamente para sincronizar CPFs remotos com o banco local
-     */
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.HOURS)
     public void synchronizeCpfs() {
-        log.info("Iniciando sincronização de CPFs");
-        // Implementação de sincronização
-        // Pode buscar todos os CPFs do people-service e sincronizar com o banco local
+        log.info("Starting CPF synchronization.");
+
     }
-    
-    /**
-     * Normaliza um CPF para padrão sem formatação e com no máximo 11 dígitos
-     */
+
     private String normalizeCpf(String cpf) {
         if (cpf == null) {
             return "";

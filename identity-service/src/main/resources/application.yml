@@ -118,7 +118,10 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
-  packages-to-scan: br.com.fiap.tech.identity.controller
+  group-configs:
+    - group: public
+      paths-to-match: /**
+      paths-to-exclude: /api/v1/people/check-cpf, /api/v1/people/check-crm
 
 jwt:
   secret: ${JWT_SECRET:c7fd2e876d9d46c2a3d8e5c2f6a95b3a8f4b7c1e9a2d5b8e3f6c9d2a5b8e1f4}

@@ -27,10 +27,6 @@ public class KafkaConfig {
         return converter;
     }
 
-    /**
-     * Este bean é específico para converter mensagens de identity-service 
-     * para a classe UserCreatedEvent no people-service.
-     */
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();

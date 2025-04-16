@@ -26,13 +26,9 @@ public class PeopleService {
             return false;
         }
         
-        // Simplest approach - just check if there's already someone with this CPF
         try {
-            // Check if any existing user has this CPF (using the people-service via HTTP)
             log.info("Attempting to check if CPF exists: {}", cpf);
             
-            // Since we can't reliably determine the event table schema,
-            // we'll always return false and let the people-service handle the CPF uniqueness check
             return false;
         } catch (Exception e) {
             log.error("Error checking if CPF exists: {}", e.getMessage());
@@ -44,14 +40,11 @@ public class PeopleService {
         if (crm == null || crm.trim().isEmpty()) {
             return false;
         }
-        
-        // Simplest approach - just check if there's already someone with this CRM
+
         try {
-            // Check if any existing doctor has this CRM (using the people-service via HTTP)
+
             log.info("Attempting to check if CRM exists: {}", crm);
             
-            // Since we can't reliably determine the event table schema,
-            // we'll always return false and let the people-service handle the CRM uniqueness check
             return false;
         } catch (Exception e) {
             log.error("Error checking if CRM exists: {}", e.getMessage());

@@ -19,10 +19,9 @@ public class UserEventConsumer {
     public Consumer<UserCreatedEvent> userCreatedInput() {
         return event -> {
             try {
-                log.info("=== EVENTO RECEBIDO === userCreatedInput: userId={}, userType={}, fullName={}", 
+                log.info("=== EVENT RECEIVED === userCreatedInput: userId={}, userType={}, fullName={}", 
                         event.getUserId(), event.getUserType(), event.getFullName());
                 
-                // Validar campos obrigatórios antes de processar
                 if (event.getUserId() == null) {
                     log.error("Event validation failed: userId is null");
                     return;
@@ -32,18 +31,15 @@ public class UserEventConsumer {
                     return;
                 }
                 
-                log.debug("Processando criação de usuário com dados: fullName={}, cpf={}, userType={}", 
+                log.debug("Processing user creation with data: fullName={}, cpf={}, userType={}", 
                         event.getFullName(), event.getCpf(), event.getUserType());
                 
-                // Chamar o serviço para processar o evento
                 peopleService.handleUserCreated(event);
-                log.info("Evento de criação de usuário processado com sucesso: userId={}, userType={}", 
+                log.info("User creation event processed successfully: userId={}, userType={}", 
                         event.getUserId(), event.getUserType());
             } catch (Exception e) {
-                log.error("Erro ao processar evento de criação de usuário: userId={}, userType={}, error={}", 
+                log.error("Error while processing user creation event: userId={}, userType={}, error={}", 
                         event.getUserId(), event.getUserType(), e.getMessage(), e);
-                // Não propagamos a exceção para evitar que o evento vá para a DLQ
-                // Mas logamos para diagnóstico
             }
         };
     }
@@ -52,7 +48,7 @@ public class UserEventConsumer {
     public Consumer<UserDeletionEvent> userDeletedInput() {
         return event -> {
             try {
-                log.info("=== EVENTO RECEBIDO === userDeletedInput: userId={}", event.getUserId());
+                log.info("=== EVENT RECEIVED === userDeletedInput: userId={}", event.getUserId());
                 
                 if (event.getUserId() == null) {
                     log.error("Event validation failed: userId is null for deletion");
@@ -60,11 +56,10 @@ public class UserEventConsumer {
                 }
                 
                 peopleService.handleUserDeleted(event);
-                log.info("Evento de exclusão de usuário processado com sucesso: userId={}", event.getUserId());
+                log.info("User deletion event processed successfully.: userId={}", event.getUserId());
             } catch (Exception e) {
-                log.error("Erro ao processar evento de exclusão de usuário: userId={}, error={}", 
+                log.error("Error while processing user deletion event: userId={}, error={}", 
                         event.getUserId(), e.getMessage(), e);
-                // Não propagamos a exceção para evitar que o evento vá para a DLQ
             }
         };
     }

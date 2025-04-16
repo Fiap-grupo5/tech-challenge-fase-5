@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Authentication API")
+@Tag(name = "Authentication", description = "Endpoints for user authentication and registration")
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
@@ -85,39 +85,6 @@ public class AuthenticationController {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Invalid credentials"));
-        }
-    }
-
-    @DeleteMapping("/admin/users/all")
-    public ResponseEntity<String> deleteAllUsers() {
-        log.info("Request to delete all users");
-        try {
-            long count = userRepository.count();
-            
-            // Try to delete events, but don't fail if the table doesn't exist
-            try {
-                jdbcTemplate.update("DELETE FROM user_created_event");
-                log.info("All user events deleted");
-            } catch (Exception e) {
-                log.warn("Could not delete user events: {}", e.getMessage());
-                // Try alternative table name
-                try {
-                    jdbcTemplate.update("DELETE FROM user_event");
-                    log.info("All user events deleted");
-                } catch (Exception ex) {
-                    log.warn("Could not delete from alternative event table: {}", ex.getMessage());
-                }
-            }
-            
-            // Then delete users
-            userRepository.deleteAll();
-            log.info("All users deleted successfully. Total: {}", count);
-            
-            return ResponseEntity.ok("All users deleted successfully. Total users: " + count);
-        } catch (Exception e) {
-            log.error("Error deleting all users: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error deleting all users: " + e.getMessage());
         }
     }
 }

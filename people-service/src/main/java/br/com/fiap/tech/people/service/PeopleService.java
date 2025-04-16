@@ -137,17 +137,16 @@ public class PeopleService {
             throw new IllegalArgumentException("Email is required");
         }
         
-        // Validate specific fields but without requiring them
         String crm = event.getCrm();
         if (crm == null || crm.trim().isEmpty()) {
             log.warn("CRM is missing for doctor: {}", event.getUserId());
-            crm = "PENDENTE"; // Default value to avoid failure
+            crm = "PENDENTE";
         }
         
         String specialty = event.getSpecialty();
         if (specialty == null || specialty.trim().isEmpty()) {
             log.warn("Specialty is missing for doctor: {}", event.getUserId());
-            specialty = "GERAL"; // Default value to avoid failure
+            specialty = "GERAL";
         }
 
         String cpf = event.getCpf();
@@ -314,7 +313,6 @@ public class PeopleService {
             administrator.setFullName(request.getFullName());
         }
         if (request.getCpf() != null && !request.getCpf().trim().isEmpty()) {
-            // Ensure CPF has at most 11 characters
             String cpf = request.getCpf();
             if (cpf.length() > 11) {
                 cpf = cpf.substring(0, 11);
@@ -456,67 +454,53 @@ public class PeopleService {
             return false;
         }
         
-        // Padronizar o CPF removendo formatação
         String normalizedCpf = normalizeCpf(cpf);
         
-        log.info("Verificando se CPF existe: {}", normalizedCpf);
+        log.info("Checking if CPF exists: {}", normalizedCpf);
         
         try {
-            // Verificações em paralelo para melhor performance
             boolean patientExists = checkCpfExistsInPatients(normalizedCpf);
             if (patientExists) {
-                log.info("CPF {} existe na tabela de pacientes", normalizedCpf);
+                log.info("CPF {} exists in the patients table", normalizedCpf);
                 return true;
             }
             
             boolean doctorExists = checkCpfExistsInDoctors(normalizedCpf);
             if (doctorExists) {
-                log.info("CPF {} existe na tabela de médicos", normalizedCpf);
+                log.info("CPF {} exists in the doctors table", normalizedCpf);
                 return true;
             }
             
             boolean adminExists = checkCpfExistsInAdmins(normalizedCpf);
             if (adminExists) {
-                log.info("CPF {} existe na tabela de administradores", normalizedCpf);
+                log.info("CPF {} exists in the administrators table", normalizedCpf);
                 return true;
             }
             
-            log.info("CPF {} não existe em nenhuma tabela", normalizedCpf);
+            log.info("CPF {} does not exist in any table.", normalizedCpf);
             return false;
         } catch (Exception e) {
-            log.error("Erro ao verificar CPF: {}", e.getMessage(), e);
-            // Em caso de erro, assumimos que pode existir para impedir duplicação
+            log.error("Error while verifying CPF: {}", e.getMessage(), e);
             return true;
         }
     }
     
-    /**
-     * Verifica a existência do CPF na tabela de pacientes
-     */
     @Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 500))
     private boolean checkCpfExistsInPatients(String cpf) {
         return patientRepository.findByCpf(cpf).isPresent();
     }
     
-    /**
-     * Verifica a existência do CPF na tabela de médicos
-     */
     @Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 500))
     private boolean checkCpfExistsInDoctors(String cpf) {
         return doctorRepository.findByCpf(cpf).isPresent();
     }
     
-    /**
-     * Verifica a existência do CPF na tabela de administradores
-     */
     @Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 500))
     private boolean checkCpfExistsInAdmins(String cpf) {
         return administratorRepository.findByCpf(cpf).isPresent();
     }
 
-    /**
-     * Normaliza um CPF para padrão sem formatação e com no máximo 11 dígitos
-     */
+
     private String normalizeCpf(String cpf) {
         if (cpf == null) {
             return "";
@@ -533,15 +517,14 @@ public class PeopleService {
             return false;
         }
         
-        log.info("Verificando se CRM existe: {}", crm);
+        log.info("Checking if CRM exists: {}", crm);
         
         try {
             boolean exists = doctorRepository.findByCrm(crm).isPresent();
-            log.info("CRM {} existe: {}", crm, exists);
+            log.info("CRM {} exists: {}", crm, exists);
             return exists;
         } catch (Exception e) {
-            log.error("Erro ao verificar CRM: {}", e.getMessage(), e);
-            // Em caso de erro, assumimos que pode existir para impedir duplicação
+            log.error("Error while verifying CRM: {}", e.getMessage(), e);
             return true;
         }
     }
