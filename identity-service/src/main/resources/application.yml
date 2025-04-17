@@ -33,6 +33,7 @@ spring:
     table: flyway_schema_history
     validate-on-migrate: true
     clean-disabled: false
+    repair-on-migrate: true
   
   cloud:
     stream:
