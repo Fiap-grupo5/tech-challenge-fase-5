@@ -1,5 +1,8 @@
 package br.com.fiap.tech.identity.controller;
 
+import br.com.fiap.tech.identity.domain.User;
+import br.com.fiap.tech.identity.domain.UserType;
+import br.com.fiap.tech.identity.dto.AdministratorDTO;
 import br.com.fiap.tech.identity.dto.AuthenticationRequest;
 import br.com.fiap.tech.identity.dto.AuthenticationResponse;
 import br.com.fiap.tech.identity.dto.ErrorResponse;
@@ -10,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -86,5 +90,44 @@ public class AuthenticationController {
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Invalid credentials"));
         }
+    }
+
+    @Operation(
+        summary = "Check if administrator exists",
+        description = "Verifies if an administrator with the given ID exists"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Verification completed successfully")
+    })
+    @GetMapping("/administrators/{id}/exists")
+    public ResponseEntity<Boolean> administratorExists(@PathVariable Long id) {
+        try {
+            boolean exists = authenticationService.checkAdministratorExists(id);
+            return ResponseEntity.ok(exists);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    @Operation(
+        summary = "Get administrator by ID",
+        description = "Retrieves administrator information by their ID"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Administrator found"),
+        @ApiResponse(responseCode = "404", description = "Administrator not found")
+    })
+    @GetMapping("/administrators/{id}")
+    public ResponseEntity<AdministratorDTO> getAdministrator(@PathVariable Long id) {
+        User user = authenticationService.getUserById(id);
+        if (user != null && UserType.ADMINISTRATOR.equals(user.getUserType())) {
+            AdministratorDTO admin = AdministratorDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
+            return ResponseEntity.ok(admin);
+        }
+        return ResponseEntity.notFound().build();
     }
 }

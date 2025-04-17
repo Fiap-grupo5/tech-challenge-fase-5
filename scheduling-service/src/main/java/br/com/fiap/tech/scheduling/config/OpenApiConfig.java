@@ -3,6 +3,7 @@ package br.com.fiap.tech.scheduling.config;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.Contact;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,5 +20,14 @@ public class OpenApiConfig {
                         .contact(new Contact()
                                 .name("FIAP Healthcare")
                                 .email("healthcare@fiap.com.br")));
+    }
+
+    @Bean
+    public GroupedOpenApi schedulingApi() {
+        return GroupedOpenApi.builder()
+                .group("scheduling-api")
+                .packagesToScan("br.com.fiap.tech.scheduling.controller")
+                .pathsToMatch("/api/v1/scheduling/**")
+                .build();
     }
 }

@@ -9,4 +9,6 @@ public interface AdministratorFacilityRepository extends JpaRepository<Administr
     List<AdministratorFacility> findByAdministratorId(Long administratorId);
     
     List<AdministratorFacility> findByHealthcareFacilityId(Long healthcareFacilityId);
+    
+    boolean existsByAdministratorIdAndHealthcareFacilityId(Long administratorId, Long healthcareFacilityId);
 }

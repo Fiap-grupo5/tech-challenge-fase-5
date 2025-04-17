@@ -165,4 +165,21 @@ public class PeopleController {
         boolean exists = peopleService.checkCrmExists(crm);
         return ResponseEntity.ok(exists);
     }
+
+    @Operation(
+        summary = "Check if doctor exists",
+        description = "Verifies if a doctor with the given ID exists"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Verification completed successfully")
+    })
+    @GetMapping("/doctors/{id}/exists")
+    public ResponseEntity<Boolean> doctorExists(@PathVariable Long id) {
+        try {
+            peopleService.getDoctor(id);
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
+        }
+    }
 }

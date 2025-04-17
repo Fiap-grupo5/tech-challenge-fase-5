@@ -128,6 +128,17 @@ services:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+    display-request-duration: true
+    operationsSorter: method
+    disable-swagger-default-url: true
+    use-root-path: true
+    syntax-highlight: 
+      activated: true
   api-docs:
     path: /v3/api-docs
+    enabled: true
   packages-to-scan: br.com.fiap.tech.scheduling.controller
+  model-and-view-allowed: true
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  show-actuator: true

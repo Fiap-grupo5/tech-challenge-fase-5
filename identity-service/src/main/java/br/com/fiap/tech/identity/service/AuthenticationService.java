@@ -229,4 +229,15 @@ public class AuthenticationService {
                 .userId(user.getId())
                 .build();
     }
+
+    public boolean checkAdministratorExists(Long id) {
+        log.info("Checking if administrator exists with ID: {}", id);
+        return userRepository.findById(id)
+                .filter(user -> UserType.ADMINISTRATOR.equals(user.getUserType()))
+                .isPresent();
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
 }

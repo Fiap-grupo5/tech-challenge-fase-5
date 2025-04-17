@@ -22,13 +22,13 @@ public class SchedulingController {
     private final SchedulingService schedulingService;
 
     @Operation(
-        summary = "Create appointment",
-        description = "Creates a new appointment for a patient with a doctor"
+        summary = "Criar agendamento",
+        description = "Cria um novo agendamento para um paciente com um médico em uma unidade de saúde"
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Appointment created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid input data or scheduling conflict"),
-        @ApiResponse(responseCode = "404", description = "Patient or doctor not found")
+        @ApiResponse(responseCode = "200", description = "Agendamento criado com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Dados inválidos ou conflito de agendamento"),
+        @ApiResponse(responseCode = "404", description = "Paciente ou médico não encontrado")
     })
     @PostMapping("/appointments")
     public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentRequest request) {
