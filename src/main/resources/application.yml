@@ -1,0 +1,51 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: scheduling-service
+  
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: true
+  
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthcare_scheduling}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+  autoconfiguration:
+    jackson:
+      enabled: true
+
+services:
+  facility:
+    url: ${FACILITY_SERVICE_URL:http://localhost:8084}
+  identity:
+    url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+  people:
+    url: ${PEOPLE_SERVICE_URL:http://localhost:8082}
+
+logging:
+  level:
+    br.com.fiap.tech.scheduling.client: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+
+# ... resto do arquivo ... 

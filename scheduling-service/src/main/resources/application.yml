@@ -5,6 +5,9 @@ spring:
   application:
     name: scheduling-service
   
+  main:
+    allow-bean-definition-overriding: true
+  
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthcare_scheduling}
     username: ${POSTGRES_USER:postgres}
@@ -119,11 +122,11 @@ feign:
 
 services:
   facility:
-    url: ${FACILITY_SERVICE_URL:http://facility-service:8084}
+    url: ${FACILITY_SERVICE_URL:http://localhost:8084}
   identity:
-    url: ${IDENTITY_SERVICE_URL:http://identity-service:8081}
+    url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
   people:
-    url: ${PEOPLE_SERVICE_URL:http://people-service:8082}
+    url: ${PEOPLE_SERVICE_URL:http://localhost:8082}
 
 springdoc:
   swagger-ui:
