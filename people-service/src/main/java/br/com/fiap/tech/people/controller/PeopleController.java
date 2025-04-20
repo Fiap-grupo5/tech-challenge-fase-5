@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -140,6 +141,7 @@ public class PeopleController {
         return ResponseEntity.ok().build();
     }
 
+    @Hidden
     @Operation(
         summary = "Check if CPF exists",
         description = "Verifies if the provided CPF is already registered in the system"
@@ -153,6 +155,7 @@ public class PeopleController {
         return ResponseEntity.ok(exists);
     }
 
+    @Hidden
     @Operation(
         summary = "Check if CRM exists",
         description = "Verifies if the provided CRM is already registered in the system"
@@ -166,6 +169,7 @@ public class PeopleController {
         return ResponseEntity.ok(exists);
     }
 
+    @Hidden
     @Operation(
         summary = "Check if doctor exists",
         description = "Verifies if a doctor with the given ID exists"

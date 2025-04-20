@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Data
 @Entity
@@ -44,9 +45,21 @@ public class Referral {
     @Column(nullable = false)
     private ReferralType referralType;
     
+    @Column(name = "patient_age")
+    private Integer patientAge;
+    
+    @Column(name = "is_pregnant")
+    private Boolean isPregnant;
+    
+    @Column(name = "has_medical_urgency")
+    private Boolean hasMedicalUrgency;
+    
     private LocalDateTime createdAt;
     
     private LocalDateTime updatedAt;
+    
+    @Transient
+    private Integer waitingTimeInDays;
     
     @PrePersist
     protected void onCreate() {
@@ -58,5 +71,15 @@ public class Referral {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+    
+    /**
+     * Calcula quantos dias o encaminhamento está aguardando desde a solicitação
+     */
+    public Integer getWaitingTimeInDays() {
+        if (this.requestedDate == null) {
+            return 0;
+        }
+        return (int) ChronoUnit.DAYS.between(this.requestedDate, LocalDateTime.now());
     }
 }

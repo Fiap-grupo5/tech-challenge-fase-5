@@ -11,4 +11,7 @@ public class ReferralRequest {
     private Long patientId;
     private Long requestedByDoctorId;
     private ReferralType referralType;
+    private Integer patientAge;
+    private Boolean isPregnant;
+    private Boolean hasMedicalUrgency;
 }

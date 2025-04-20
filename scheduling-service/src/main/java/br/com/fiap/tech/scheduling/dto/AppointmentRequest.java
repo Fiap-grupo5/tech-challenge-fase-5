@@ -1,6 +1,7 @@
 package br.com.fiap.tech.scheduling.dto;
 
 import br.com.fiap.tech.scheduling.domain.AppointmentType;
+import br.com.fiap.tech.scheduling.domain.PriorityLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -11,7 +12,13 @@ import java.time.LocalTime;
 @Schema(description = "Dados para criação de agendamento")
 public class AppointmentRequest {
     @Schema(
-        description = "Data do agendamento",
+        description = "Dia da semana para o agendamento (MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY)",
+        example = "MONDAY"
+    )
+    private String appointmentDay;
+    
+    @Schema(
+        description = "Data específica do agendamento (opcional, usado apenas para referência de data específica)",
         example = "2023-12-20"
     )
     private LocalDate appointmentDate;
@@ -57,4 +64,10 @@ public class AppointmentRequest {
         example = "1"
     )
     private Long referralId;
+    
+    @Schema(
+        description = "Nível de prioridade do agendamento (LOW, MEDIUM, HIGH, URGENT)",
+        example = "MEDIUM"
+    )
+    private PriorityLevel priorityLevel;
 }

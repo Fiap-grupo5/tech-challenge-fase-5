@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -230,5 +231,82 @@ public class FacilityService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         return R * c;
+    }
+
+    /**
+     * Verifica se uma unidade de saúde tem capacidade disponível para uma data específica
+     */
+    public boolean checkAvailabilityForDate(Long facilityId, LocalDate date) {
+        HealthcareFacility facility = getFacility(facilityId);
+        
+        // Validar capacidade configurada
+        if (facility.getMaxDailyCapacity() == null) {
+            throw new IllegalStateException("Unidade de saúde não possui capacidade máxima configurada");
+        }
+        
+        if (facility.getCurrentLoad() == null) {
+            facility.setCurrentLoad(0);
+            facilityRepository.save(facility);
+        }
+        
+        // Em uma implementação mais avançada, poderíamos ter uma tabela de carga por data
+        // Por enquanto, usamos a carga atual vs. capacidade máxima
+        return facility.getCurrentLoad() < facility.getMaxDailyCapacity();
+    }
+
+    /**
+     * Obtém a carga atual de uma unidade de saúde
+     */
+    public Integer getCurrentLoad(Long facilityId) {
+        HealthcareFacility facility = getFacility(facilityId);
+        
+        if (facility.getCurrentLoad() == null) {
+            facility.setCurrentLoad(0);
+            facilityRepository.save(facility);
+        }
+        
+        return facility.getCurrentLoad();
+    }
+
+    /**
+     * Obtém a capacidade máxima diária de uma unidade de saúde
+     */
+    public Integer getMaxDailyCapacity(Long facilityId) {
+        HealthcareFacility facility = getFacility(facilityId);
+        
+        if (facility.getMaxDailyCapacity() == null) {
+            throw new IllegalStateException("Unidade de saúde não possui capacidade máxima configurada");
+        }
+        
+        return facility.getMaxDailyCapacity();
+    }
+
+    /**
+     * Atualiza a carga atual de uma unidade de saúde
+     */
+    @Transactional
+    public void updateCurrentLoad(Long facilityId, Boolean increment) {
+        HealthcareFacility facility = getFacility(facilityId);
+        
+        if (facility.getCurrentLoad() == null) {
+            facility.setCurrentLoad(0);
+        }
+        
+        if (Boolean.TRUE.equals(increment)) {
+            // Verificar limite
+            if (facility.getMaxDailyCapacity() != null && 
+                facility.getCurrentLoad() >= facility.getMaxDailyCapacity()) {
+                throw new IllegalStateException("Unidade de saúde já está em capacidade máxima");
+            }
+            facility.setCurrentLoad(facility.getCurrentLoad() + 1);
+        } else {
+            // Decrementar, garantindo que não fique negativo
+            if (facility.getCurrentLoad() > 0) {
+                facility.setCurrentLoad(facility.getCurrentLoad() - 1);
+            }
+        }
+        
+        facilityRepository.save(facility);
+        log.info("Carga da unidade ID {} atualizada para {}", facilityId, facility.getCurrentLoad());
     }
 }

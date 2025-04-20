@@ -23,4 +23,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
            "WHERE a.doctorId = :doctorId AND a.appointmentDate = :date " +
            "AND ((a.startTime <= :endTime AND a.endTime >= :startTime))")
     boolean hasConflictingAppointment(Long doctorId, LocalDate date, LocalTime startTime, LocalTime endTime);
+    
+    List<Appointment> findByStatus(br.com.fiap.tech.scheduling.domain.AppointmentStatus status);
+    
+    List<Appointment> findByAppointmentDateAndStatus(LocalDate date, br.com.fiap.tech.scheduling.domain.AppointmentStatus status);
 }

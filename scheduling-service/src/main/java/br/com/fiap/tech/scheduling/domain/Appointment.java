@@ -49,6 +49,9 @@ public class Appointment {
     
     private Long referralId;
     
+    @Enumerated(EnumType.STRING)
+    private PriorityLevel priorityLevel;
+    
     private LocalDateTime createdAt;
     
     private LocalDateTime updatedAt;

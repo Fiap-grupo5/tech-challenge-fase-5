@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -83,7 +84,9 @@ public class AuthenticationController {
             @RequestBody AuthenticationRequest request
     ) {
         try {
-            return ResponseEntity.ok(authenticationService.authenticate(request));
+            AuthenticationResponse response = authenticationService.authenticate(request);
+            response.setUsername(request.getUsername());
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error authenticating user: {}", e.getMessage());
             return ResponseEntity
@@ -92,6 +95,7 @@ public class AuthenticationController {
         }
     }
 
+    @Hidden
     @Operation(
         summary = "Check if administrator exists",
         description = "Verifies if an administrator with the given ID exists"
@@ -109,6 +113,7 @@ public class AuthenticationController {
         }
     }
 
+    @Hidden
     @Operation(
         summary = "Get administrator by ID",
         description = "Retrieves administrator information by their ID"

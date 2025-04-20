@@ -227,6 +227,7 @@ public class AuthenticationService {
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .userId(user.getId())
+                .username(user.getUsername())
                 .build();
     }
 

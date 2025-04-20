@@ -10,16 +10,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -330,5 +333,110 @@ public class FacilityController {
             @RequestParam(defaultValue = "10.0") @Positive(message = "O raio deve ser positivo") Double radiusInKm,
             @RequestParam(defaultValue = "10") @Positive(message = "O limite deve ser positivo") Integer limit) {
         return ResponseEntity.ok(facilityService.findNearbyFacilities(latitude, longitude, radiusInKm, limit));
+    }
+
+    @Operation(
+        summary = "Check availability for date",
+        description = "Checks if a healthcare facility has available capacity for a specific date"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Availability check completed successfully"
+        ),
+        @ApiResponse(
+            responseCode = "404", 
+            description = "Facility not found",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiErrorSchema.class)
+            )
+        )
+    })
+    @GetMapping("/{facilityId}/available")
+    public ResponseEntity<Boolean> checkAvailabilityForDate(
+            @PathVariable @Positive(message = "O ID da unidade deve ser positivo") Long facilityId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ResponseEntity.ok(facilityService.checkAvailabilityForDate(facilityId, date));
+    }
+
+    @Operation(
+        summary = "Get current load",
+        description = "Gets the current load of a healthcare facility"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Current load retrieved successfully"
+        ),
+        @ApiResponse(
+            responseCode = "404", 
+            description = "Facility not found",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiErrorSchema.class)
+            )
+        )
+    })
+    @GetMapping("/{facilityId}/current-load")
+    public ResponseEntity<Integer> getCurrentLoad(
+            @PathVariable @Positive(message = "O ID da unidade deve ser positivo") Long facilityId
+    ) {
+        return ResponseEntity.ok(facilityService.getCurrentLoad(facilityId));
+    }
+
+    @Hidden
+    @Operation(
+        summary = "Get max daily capacity",
+        description = "Gets the maximum daily capacity of a healthcare facility"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Max capacity retrieved successfully"
+        ),
+        @ApiResponse(
+            responseCode = "404", 
+            description = "Facility not found",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiErrorSchema.class)
+            )
+        )
+    })
+    @GetMapping("/{facilityId}/max-capacity")
+    public ResponseEntity<Integer> getMaxDailyCapacity(
+            @PathVariable @Positive(message = "O ID da unidade deve ser positivo") Long facilityId
+    ) {
+        return ResponseEntity.ok(facilityService.getMaxDailyCapacity(facilityId));
+    }
+
+    @Operation(
+        summary = "Update current load",
+        description = "Increments or decrements the current load of a healthcare facility"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Current load updated successfully"
+        ),
+        @ApiResponse(
+            responseCode = "404", 
+            description = "Facility not found",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ApiErrorSchema.class)
+            )
+        )
+    })
+    @Hidden
+    @PutMapping("/{facilityId}/current-load")
+    public ResponseEntity<Void> updateCurrentLoad(
+            @PathVariable @Positive(message = "O ID da unidade deve ser positivo") Long facilityId,
+            @RequestParam Boolean increment
+    ) {
+        facilityService.updateCurrentLoad(facilityId, increment);
+        return ResponseEntity.ok().build();
     }
 }
