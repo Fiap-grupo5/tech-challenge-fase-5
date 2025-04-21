@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -49,14 +48,11 @@ class ServiceTest {
     private StreamBridge streamBridge;
 
     @Mock
-    private JdbcTemplate jdbcTemplate;
-
     private PeopleService peopleService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        peopleService = new PeopleService(jdbcTemplate, userRepository);
         when(streamBridge.send(anyString(), any())).thenReturn(true);
     }
 

@@ -2,11 +2,9 @@ package br.com.fiap.tech.identity.service;
 
 import br.com.fiap.tech.identity.domain.User;
 import br.com.fiap.tech.identity.domain.UserType;
-import br.com.fiap.tech.identity.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -17,9 +15,6 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class PeopleService {
-
-    private final JdbcTemplate jdbcTemplate;
-    private final UserRepository userRepository;
 
     public boolean checkCpfExists(String cpf) {
         if (cpf == null || cpf.trim().isEmpty()) {
@@ -51,6 +46,4 @@ public class PeopleService {
             return false;
         }
     }
-
-
 } 
