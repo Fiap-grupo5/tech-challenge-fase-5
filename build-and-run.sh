@@ -4,7 +4,7 @@ echo "Building and running healthcare microservices..."
 
 # Build all services
 echo "Building services..."
-./mvnw clean package -DskipTests
+mvn clean package -DskipTests
 
 # Run docker-compose
 echo "Starting containers..."

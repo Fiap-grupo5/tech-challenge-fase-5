@@ -1,81 +1,119 @@
-# Healthcare System Microservices
+# Sistema de Agendamento Médico
 
-A comprehensive healthcare system built with Spring Boot microservices architecture.
+Um sistema completo de gestão de saúde baseado em microserviços para agendamento de consultas e exames médicos. Desenvolvido como trabalho de conclusão da pós-graduação em Desenvolvimento e Arquitetura em Java e Spring Boot.
 
-## Services
+## Arquitetura de Microserviços
 
-1. **Identity Service** (Port: 8081)
-   - User authentication and authorization
-   - JWT token management
-   - User registration
+O sistema é composto por quatro microserviços principais que trabalham em conjunto:
 
-2. **People Service** (Port: 8082)
-   - Patient management
-   - Doctor management
-   - Administrator management
+### Identity Service (Porta: 8081)
+- Autenticação e autorização de usuários
+- Gerenciamento de tokens JWT
+- Controle de acesso baseado em perfis
 
-3. **Scheduling Service** (Port: 8083)
-   - Appointment management
-   - Referral management
-   - Schedule coordination
+### People Service (Porta: 8082)
+- Gestão de pacientes
+- Gestão de médicos e suas especialidades
+- Administração de usuários do sistema
 
-4. **Facility Service** (Port: 8084)
-   - Healthcare facility management
-   - Doctor schedule management
-   - Facility capacity tracking
+### Scheduling Service (Porta: 8083)
+- Gerenciamento de agendamentos de consultas e exames
+- Controle de encaminhamentos
+- Priorização de atendimentos
+- Validação de disponibilidade
 
-## Prerequisites
+### Facility Service (Porta: 8084)
+- Gestão de unidades de saúde
+- Controle de agendas médicas
+- Monitoramento de capacidade das unidades
+- Busca por unidades de saúde próximas
 
-- Docker and Docker Compose
-- Java 17
-- Maven
+## Tecnologias Utilizadas
 
-## Building and Running
+- **Backend**: Java 17, Spring Boot 3.x
+- **Comunicação**: RESTful APIs, Apache Kafka (Mensageria)
+- **Persistência**: PostgreSQL, Spring Data JPA
+- **Documentação**: Swagger/OpenAPI
+- **Infraestrutura**: Docker, Docker Compose
+- **Ferramentas**: Maven, Lombok, Spring Cloud
 
-1. Build all services:
-   ```bash
-   mvn clean package -DskipTests
-   ```
+## Dependências do Sistema
 
-2. Make the database initialization script executable:
-   ```bash
-   chmod +x init-multiple-databases.sh
-   ```
-
-3. Start all services using Docker Compose:
-   ```bash
-   docker-compose up -d
-   ```
-
-4. Check service status:
-   ```bash
-   docker-compose ps
-   ```
-
-## Service Dependencies
-
-- Kafka (Event Bus)
-- PostgreSQL (Database)
+- **Kafka**: Barramento de eventos para comunicação assíncrona
+- **PostgreSQL**: Banco de dados relacional com quatro schemas:
   - healthcare_identity
   - healthcare_people
   - healthcare_scheduling
   - healthcare_facility
 
-## API Documentation
+## Pré-requisitos
 
-Each service exposes its API documentation at:
-- Identity Service: http://localhost:8081/swagger-ui.html
-- People Service: http://localhost:8082/swagger-ui.html
-- Scheduling Service: http://localhost:8083/swagger-ui.html
-- Facility Service: http://localhost:8084/swagger-ui.html
+- Docker e Docker Compose
+- Java 17
+- Maven
 
-## Stopping the System
+## Executando o Sistema
 
-To stop all services:
+### Windows
+
 ```bash
-docker-compose down
+# Execute o script de construção e execução para Windows
+build-and-run.bat
 ```
 
-To stop and remove all data (including volumes):
+### Linux/MacOS
+
 ```bash
+# Torne o script executável
+chmod +x build-and-run.sh init-multiple-databases.sh
+
+# Execute o script de construção e execução
+./build-and-run.sh
+```
+
+### Manualmente
+
+1. Construa todos os serviços:
+   ```bash
+   mvn clean package -DskipTests
+   ```
+
+2. Inicie todos os serviços usando Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. Verifique o status dos serviços:
+   ```bash
+   docker-compose ps
+   ```
+
+## Documentação da API
+
+Cada serviço expõe sua documentação de API via Swagger:
+
+- Identity Service: http://localhost:8081/swagger-ui/index.html
+- People Service: http://localhost:8082/swagger-ui/index.html
+- Scheduling Service: http://localhost:8083/swagger-ui/index.html
+- Facility Service: http://localhost:8084/swagger-ui/index.html
+
+## Fluxo Principal do Sistema
+
+1. Pacientes são cadastrados no People Service
+2. Médicos são cadastrados e têm suas agendas definidas no Facility Service
+3. Unidades de saúde são configuradas com capacidades no Facility Service
+4. Agendamentos são criados no Scheduling Service, que valida disponibilidade do médico e capacidade da unidade
+
+## Parando o Sistema
+
+```bash
+# Para parar todos os serviços mantendo os dados
+docker-compose down
+
+# Para parar e remover todos os dados (incluindo volumes)
 docker-compose down -v
+```
+
+## Autores
+
+- Equipe 5 FIAP Tech Challenge - Turma 2024
