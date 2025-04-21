@@ -49,7 +49,7 @@ public class FacilityService {
         String zipCode = StringSanitizer.sanitize(request.getZipCode());
         
         var facility = HealthcareFacility.builder()
-                .name(name)
+                .name(request.getName())
                 .facilityType(request.getFacilityType())
                 .cnpj(cnpj)
                 .phoneNumber(phoneNumber)
